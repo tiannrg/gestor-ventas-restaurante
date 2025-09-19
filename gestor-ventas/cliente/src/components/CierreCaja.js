@@ -71,12 +71,11 @@ function CierreCaja() {
       width: 150,
       valueFormatter: (value) => new Date(value).toLocaleDateString('es-CO', { timeZone: 'UTC' }),
     },
-    // --- AJUSTE AQUÍ ---
     { 
       field: 'nombre_negocio', 
       headerName: 'Negocio', 
-      flex: 1, // Le damos flexibilidad a esta columna
-      minWidth: 150 // Y un ancho mínimo
+      flex: 1,
+      minWidth: 150 
     },
     {
       field: 'total_ventas',
@@ -96,12 +95,11 @@ function CierreCaja() {
       headerAlign: 'left',
       valueFormatter: (value) => `$${Number(value).toLocaleString('es-CO')}`,
     },
-    // --- Y AJUSTE AQUÍ ---
     {
       field: 'ganancia',
       headerName: 'Ganancia Neta',
       type: 'number',
-      width: 150, // Le damos un ancho fijo a esta columna
+      width: 150,
       align: 'left',
       headerAlign: 'left',
       valueFormatter: (value) => `$${Number(value).toLocaleString('es-CO')}`,

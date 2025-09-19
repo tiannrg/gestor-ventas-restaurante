@@ -8,7 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 function GastosManager() {
   const [gastos, setGastos] = useState([]);
   const [formState, setFormState] = useState({
-    id: null, // Para saber si estamos editando
+    id: null,
     descripcion: '',
     monto: '',
     fecha: new Date().toISOString().slice(0, 10),
@@ -33,7 +33,6 @@ function GastosManager() {
       .catch(error => console.error('Error al obtener los gastos:', error));
   }, [filtroFecha, filtroNegocio]);
 
-  // Efecto para filtrar localmente por el texto de búsqueda
   useEffect(() => {
     const filtered = gastos.filter(gasto =>
       gasto.descripcion.toLowerCase().includes(searchText.toLowerCase()) ||

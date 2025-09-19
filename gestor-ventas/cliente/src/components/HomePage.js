@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Paper, Button } from '@mui/material';
 
-function HomePage({ setVista }) { // Acepta setVista para navegar
+function HomePage({ setVista }) {
   return (
     <Paper sx={{ p: 4, textAlign: 'center' }}>
       <Typography variant="h2" gutterBottom>

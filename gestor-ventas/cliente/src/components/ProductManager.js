@@ -10,11 +10,8 @@ function ProductManager() {
   const [formState, setFormState] = useState({ id: null, nombre: '', precio: '', negocio_id: '1' });
   const [searchText, setSearchText] = useState('');
   const [filteredRows, setFilteredRows] = useState([]);
-  
-  // --- 1. NUEVO ESTADO PARA EL FILTRO DE NEGOCIO ---
   const [filtroNegocio, setFiltroNegocio] = useState('');
 
-  // --- 2. USEEFFECT MODIFICADO PARA FETCHING CON FILTROS ---
   useEffect(() => {
     let url = 'http://localhost:3001/productos';
     if (filtroNegocio) {
@@ -27,9 +24,8 @@ function ProductManager() {
         setProductos(data);
       })
       .catch(error => console.error('Error fetching products:', error));
-  }, [filtroNegocio]); // Se ejecuta de nuevo si cambia el filtro de negocio
+  }, [filtroNegocio]);
 
-  // Este useEffect para la búsqueda local funciona perfectamente
   useEffect(() => {
     const filtered = productos.filter(producto =>
       (producto.nombre && producto.nombre.toLowerCase().includes(searchText.toLowerCase())) ||
@@ -71,7 +67,6 @@ function ProductManager() {
         if (formState.id) {
             setProductos(productos.map(p => p.id === formState.id ? { ...p, ...productoData, id: formState.id } : p));
         } else {
-            // Si hay un filtro aplicado, lo quitamos para ver el producto nuevo
             if (filtroNegocio && filtroNegocio !== productoData.negocio_id.toString()) {
               setFiltroNegocio('');
             } else {
@@ -141,7 +136,7 @@ function ProductManager() {
       </Paper>
 
       <Paper sx={{ p: 2 }}>
-        {/* --- 3. CONTROLES DE FILTRO Y BÚSQUEDA --- */}
+        {}
         <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <Select value={filtroNegocio} onChange={e => setFiltroNegocio(e.target.value)} displayEmpty sx={{ minWidth: 180 }}>
                 <MenuItem value="">Todos los Negocios</MenuItem>
