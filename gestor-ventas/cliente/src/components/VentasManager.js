@@ -2,9 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { 
     Button, TextField, Select, MenuItem, Box, Paper, Typography, IconButton, Grid,
-    Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText 
+    Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, InputAdornment 
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import SearchIcon from '@mui/icons-material/Search'; // <-- 1. NUEVO IMPORT
 
 function VentasManager() {
   const [ventas, setVentas] = useState([]);
@@ -19,6 +20,10 @@ function VentasManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroNegocio, setFiltroNegocio] = useState('');
+  
+  // --- 2. NUEVOS ESTADOS ---
+  const [searchText, setSearchText] = useState('');
+  const [filteredVentas, setFilteredVentas] = useState([]);
 
   useEffect(() => {
     let url = 'http://localhost:3001/ventas?';
@@ -30,6 +35,16 @@ function VentasManager() {
       .then(data => setVentas(data))
       .catch(error => console.error('Error al obtener las ventas:', error));
   }, [filtroFecha, filtroNegocio]);
+
+  // --- 3. NUEVO USEEFFECT PARA FILTRAR LOCALMENTE ---
+  useEffect(() => {
+    const filtered = ventas.filter(venta =>
+      (venta.cliente && venta.cliente.toLowerCase().includes(searchText.toLowerCase())) ||
+      (venta.total && venta.total.toString().includes(searchText))
+    );
+    setFilteredVentas(filtered);
+  }, [searchText, ventas]);
+
 
   useEffect(() => {
     fetch('http://localhost:3001/productos')
@@ -160,18 +175,40 @@ function VentasManager() {
 
       <Paper sx={{ p: 2 }}>
         <Typography variant="h6" gutterBottom>Historial de Ventas</Typography>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        
+        {/* --- SECCIÓN DE FILTROS ACTUALIZADA --- */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField type="date" value={filtroFecha} onChange={e => setFiltroFecha(e.target.value)} InputLabelProps={{ shrink: true }} label="Filtrar por fecha" />
           <Select value={filtroNegocio} onChange={e => setFiltroNegocio(e.target.value)} displayEmpty>
             <MenuItem value="">Todos los Negocios</MenuItem>
             <MenuItem value="1">Comidas Rápidas</MenuItem>
             <MenuItem value="2">Almuerzos</MenuItem>
           </Select>
-          <Button onClick={() => setFiltroFecha('')}>Quitar Filtro de Fecha</Button>
+          {/* --- 7. BOTÓN MEJORADO --- */}
+          <Button onClick={() => { setFiltroFecha(''); setFiltroNegocio(''); setSearchText(''); }}>Quitar Filtros</Button>
         </Box>
+
+        {/* --- 5. NUEVA BARRA DE BÚSQUEDA --- */}
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Buscar venta por cliente o total..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
         <Box sx={{ height: 400, width: '100%' }}>
           <DataGrid
-            rows={ventas}
+            // --- 6. TABLA USA LAS VENTAS FILTRADAS ---
+            rows={filteredVentas}
             columns={columns}
             initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
             pageSizeOptions={[5, 10, 20]}

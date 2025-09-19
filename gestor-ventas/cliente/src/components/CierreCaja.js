@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button, TextField, Select, MenuItem, Box, Paper, Typography, List, ListItem, ListItemText, ListItemIcon } from '@mui/material';
+import { Button, TextField, Select, MenuItem, Box, Paper, Typography, List, ListItem, ListItemText, ListItemIcon, InputAdornment } from '@mui/material';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import SearchIcon from '@mui/icons-material/Search';
 import { DataGrid } from '@mui/x-data-grid';
 
 function CierreCaja() {
@@ -11,17 +12,31 @@ function CierreCaja() {
   const [resultado, setResultado] = useState(null);
   const [loading, setLoading] = useState(false);
   const [historial, setHistorial] = useState([]);
+  const [filtroFecha, setFiltroFecha] = useState('');
+  const [filtroNegocio, setFiltroNegocio] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [filteredHistorial, setFilteredHistorial] = useState([]);
 
-  const fetchHistorial = () => {
-    fetch('http://localhost:3001/cierres-caja/historial')
+  useEffect(() => {
+    let url = 'http://localhost:3001/cierres-caja/historial?';
+    if (filtroFecha) url += `fecha=${filtroFecha}&`;
+    if (filtroNegocio) url += `negocio_id=${filtroNegocio}`;
+
+    fetch(url)
       .then(res => res.json())
       .then(data => setHistorial(data))
       .catch(error => console.error('Error al obtener historial:', error));
-  };
+  }, [filtroFecha, filtroNegocio]);
 
   useEffect(() => {
-    fetchHistorial();
-  }, []);
+    const filtered = historial.filter(item =>
+      (item.nombre_negocio && item.nombre_negocio.toLowerCase().includes(searchText.toLowerCase())) ||
+      (item.total_ventas && item.total_ventas.toString().includes(searchText)) ||
+      (item.total_gastos && item.total_gastos.toString().includes(searchText)) ||
+      (item.ganancia && item.ganancia.toString().includes(searchText))
+    );
+    setFilteredHistorial(filtered);
+  }, [searchText, historial]);
 
   const handleGenerarCierre = () => {
     if (!fecha) {
@@ -38,7 +53,8 @@ function CierreCaja() {
       .then(res => res.json())
       .then(data => {
         setResultado(data);
-        fetchHistorial();
+        setFiltroFecha('');
+        setFiltroNegocio('');
         setLoading(false);
       })
       .catch(error => {
@@ -55,7 +71,13 @@ function CierreCaja() {
       width: 150,
       valueFormatter: (value) => new Date(value).toLocaleDateString('es-CO', { timeZone: 'UTC' }),
     },
-    { field: 'nombre_negocio', headerName: 'Negocio', width: 150 },
+    // --- AJUSTE AQUÍ ---
+    { 
+      field: 'nombre_negocio', 
+      headerName: 'Negocio', 
+      flex: 1, // Le damos flexibilidad a esta columna
+      minWidth: 150 // Y un ancho mínimo
+    },
     {
       field: 'total_ventas',
       headerName: 'Total Ventas',
@@ -74,11 +96,12 @@ function CierreCaja() {
       headerAlign: 'left',
       valueFormatter: (value) => `$${Number(value).toLocaleString('es-CO')}`,
     },
+    // --- Y AJUSTE AQUÍ ---
     {
       field: 'ganancia',
       headerName: 'Ganancia Neta',
       type: 'number',
-      flex: 1,
+      width: 150, // Le damos un ancho fijo a esta columna
       align: 'left',
       headerAlign: 'left',
       valueFormatter: (value) => `$${Number(value).toLocaleString('es-CO')}`,
@@ -150,9 +173,36 @@ function CierreCaja() {
 
       <Paper sx={{ p: 2 }}>
         <Typography variant="h6" gutterBottom>Historial de Cierres</Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <TextField type="date" value={filtroFecha} onChange={e => setFiltroFecha(e.target.value)} InputLabelProps={{ shrink: true }} label="Filtrar por fecha" />
+            <Select value={filtroNegocio} onChange={e => setFiltroNegocio(e.target.value)} displayEmpty>
+                <MenuItem value="">Todos los Negocios</MenuItem>
+                <MenuItem value="1">Comidas Rápidas</MenuItem>
+                <MenuItem value="2">Almuerzos</MenuItem>
+            </Select>
+            <Button onClick={() => { setFiltroFecha(''); setFiltroNegocio(''); setSearchText('')}}>Quitar Filtros</Button>
+        </Box>
+
+        <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Buscar por negocio o monto..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            sx={{ mb: 2 }}
+            InputProps={{
+                startAdornment: (
+                <InputAdornment position="start">
+                    <SearchIcon />
+                </InputAdornment>
+                ),
+            }}
+        />
+
         <Box sx={{ height: 400, width: '100%' }}>
           <DataGrid
-            rows={historial}
+            rows={filteredHistorial}
             columns={columns}
             initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
             pageSizeOptions={[5, 10]}
