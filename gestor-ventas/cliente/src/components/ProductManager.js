@@ -6,33 +6,38 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 
 function ProductManager() {
-  const [productos, setProductos] = useState([]);
+  const [allProductos, setAllProductos] = useState([]); 
+  const [filteredRows, setFilteredRows] = useState([]);
   const [formState, setFormState] = useState({ id: null, nombre: '', precio: '', negocio_id: '1' });
   const [searchText, setSearchText] = useState('');
-  const [filteredRows, setFilteredRows] = useState([]);
   const [filtroNegocio, setFiltroNegocio] = useState('');
-
   useEffect(() => {
-    let url = 'http://localhost:3001/productos';
-    if (filtroNegocio) {
-      url += `?negocio_id=${filtroNegocio}`;
-    }
-    
-    fetch(url)
+    fetch('http://localhost:3001/productos')
       .then(res => res.json())
       .then(data => {
-        setProductos(data);
+        setAllProductos(data);
       })
       .catch(error => console.error('Error fetching products:', error));
-  }, [filtroNegocio]);
+  }, []); 
 
   useEffect(() => {
-    const filtered = productos.filter(producto =>
-      (producto.nombre && producto.nombre.toLowerCase().includes(searchText.toLowerCase())) ||
-      (producto.precio && producto.precio.toString().includes(searchText))
-    );
-    setFilteredRows(filtered);
-  }, [searchText, productos]);
+    let productosFiltrados = [...allProductos];
+    if (filtroNegocio) {
+      productosFiltrados = productosFiltrados.filter(
+        producto => producto.negocio_id.toString() === filtroNegocio
+      );
+    }
+
+    if (searchText) {
+      productosFiltrados = productosFiltrados.filter(producto =>
+        (producto.nombre && producto.nombre.toLowerCase().includes(searchText.toLowerCase())) ||
+        (producto.precio && producto.precio.toString().includes(searchText))
+      );
+    }
+    
+    setFilteredRows(productosFiltrados);
+  }, [searchText, filtroNegocio, allProductos]);
+
 
   const handleFormChange = (e) => {
     setFormState({ ...formState, [e.target.name]: e.target.value });
@@ -65,13 +70,9 @@ function ProductManager() {
     .then(res => res.json())
     .then(data => {
         if (formState.id) {
-            setProductos(productos.map(p => p.id === formState.id ? { ...p, ...productoData, id: formState.id } : p));
+          setAllProductos(allProductos.map(p => p.id === formState.id ? { ...p, ...productoData, id: formState.id } : p));
         } else {
-            if (filtroNegocio && filtroNegocio !== productoData.negocio_id.toString()) {
-              setFiltroNegocio('');
-            } else {
-              setProductos([...productos, { ...productoData, id: data.productoId }]);
-            }
+          setAllProductos([...allProductos, { ...productoData, id: data.productoId }]);
         }
         resetForm();
     })
@@ -81,7 +82,7 @@ function ProductManager() {
   const handleDelete = (id) => {
     fetch(`http://localhost:3001/productos/${id}`, { method: 'DELETE' })
       .then(() => {
-        setProductos(productos.filter(p => p.id !== id));
+        setAllProductos(allProductos.filter(p => p.id !== id));
       })
       .catch(error => console.error('Error deleting product:', error));
   };
@@ -136,7 +137,6 @@ function ProductManager() {
       </Paper>
 
       <Paper sx={{ p: 2 }}>
-        {}
         <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <Select value={filtroNegocio} onChange={e => setFiltroNegocio(e.target.value)} displayEmpty sx={{ minWidth: 180 }}>
                 <MenuItem value="">Todos los Negocios</MenuItem>

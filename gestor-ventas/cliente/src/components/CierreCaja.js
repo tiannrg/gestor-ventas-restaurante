@@ -11,32 +11,51 @@ function CierreCaja() {
   const [negocioId, setNegocioId] = useState('1');
   const [resultado, setResultado] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [historial, setHistorial] = useState([]);
+  const [allHistorial, setAllHistorial] = useState([]); 
+  const [filteredHistorial, setFilteredHistorial] = useState([]);
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroNegocio, setFiltroNegocio] = useState('');
   const [searchText, setSearchText] = useState('');
-  const [filteredHistorial, setFilteredHistorial] = useState([]);
 
-  useEffect(() => {
-    let url = 'http://localhost:3001/cierres-caja/historial?';
-    if (filtroFecha) url += `fecha=${filtroFecha}&`;
-    if (filtroNegocio) url += `negocio_id=${filtroNegocio}`;
-
-    fetch(url)
+  const fetchHistorial = () => {
+    fetch('http://localhost:3001/cierres-caja/historial')
       .then(res => res.json())
-      .then(data => setHistorial(data))
+      .then(data => setAllHistorial(data))
       .catch(error => console.error('Error al obtener historial:', error));
-  }, [filtroFecha, filtroNegocio]);
+  };
 
   useEffect(() => {
-    const filtered = historial.filter(item =>
-      (item.nombre_negocio && item.nombre_negocio.toLowerCase().includes(searchText.toLowerCase())) ||
-      (item.total_ventas && item.total_ventas.toString().includes(searchText)) ||
-      (item.total_gastos && item.total_gastos.toString().includes(searchText)) ||
-      (item.ganancia && item.ganancia.toString().includes(searchText))
-    );
-    setFilteredHistorial(filtered);
-  }, [searchText, historial]);
+    fetchHistorial();
+  }, []);
+
+  useEffect(() => {
+    let historialFiltrado = [...allHistorial];
+
+    if (filtroFecha) {
+      historialFiltrado = historialFiltrado.filter(item => {
+        const itemDate = new Date(item.fecha).toISOString().slice(0, 10);
+        return itemDate === filtroFecha;
+      });
+    }
+
+    if (filtroNegocio) {
+      historialFiltrado = historialFiltrado.filter(
+        item => item.negocio_id.toString() === filtroNegocio
+      );
+    }
+
+    if (searchText) {
+      historialFiltrado = historialFiltrado.filter(item =>
+        (item.nombre_negocio && item.nombre_negocio.toLowerCase().includes(searchText.toLowerCase())) ||
+        (item.total_ventas && item.total_ventas.toString().includes(searchText)) ||
+        (item.total_gastos && item.total_gastos.toString().includes(searchText)) ||
+        (item.ganancia && item.ganancia.toString().includes(searchText))
+      );
+    }
+
+    setFilteredHistorial(historialFiltrado);
+  }, [filtroFecha, filtroNegocio, searchText, allHistorial]);
+
 
   const handleGenerarCierre = () => {
     if (!fecha) {
@@ -53,8 +72,7 @@ function CierreCaja() {
       .then(res => res.json())
       .then(data => {
         setResultado(data);
-        setFiltroFecha('');
-        setFiltroNegocio('');
+        fetchHistorial();
         setLoading(false);
       })
       .catch(error => {

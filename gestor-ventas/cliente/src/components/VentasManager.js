@@ -6,6 +6,8 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';        
+import RemoveIcon from '@mui/icons-material/Remove';   
 
 function VentasManager() {
     const [ventas, setVentas] = useState([]);
@@ -23,7 +25,6 @@ function VentasManager() {
     const [searchText, setSearchText] = useState('');
     const [filteredVentas, setFilteredVentas] = useState([]);
     const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
-
 
     useEffect(() => {
         let url = 'http://localhost:3001/ventas?';
@@ -83,7 +84,6 @@ function VentasManager() {
         }
     };
 
-
     const handleAddItem = (producto) => {
         const itemExistente = itemsVenta.find(item => item.id === producto.id);
         if (itemExistente) {
@@ -94,6 +94,28 @@ function VentasManager() {
             setItemsVenta([...itemsVenta, { ...producto, cantidad: 1 }]);
         }
     };
+    
+    const handleIncrementItem = (productoId) => {
+        setItemsVenta(itemsVenta.map(item =>
+            item.id === productoId
+                ? { ...item, cantidad: item.cantidad + 1 }
+                : item
+        ));
+    };
+
+    const handleDecrementItem = (productoId) => {
+        const itemExistente = itemsVenta.find(item => item.id === productoId);
+        if (itemExistente.cantidad === 1) {
+            setItemsVenta(itemsVenta.filter(item => item.id !== productoId));
+        } else {
+            setItemsVenta(itemsVenta.map(item =>
+                item.id === productoId
+                    ? { ...item, cantidad: item.cantidad - 1 }
+                    : item
+            ));
+        }
+    };
+
 
     const totalVenta = useMemo(() => {
         return itemsVenta.reduce((total, item) => total + (item.precio * item.cantidad), 0);
@@ -144,9 +166,7 @@ function VentasManager() {
                         width: '100%',
                         height: '70%',
                         backgroundColor: params.value === 'Pagado' ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)',
-                        '& .MuiSelect-select': {
-                            padding: '0 10px',
-                        },
+                        '& .MuiSelect-select': { padding: '0 10px' },
                     }}
                 >
                     <MenuItem value="Pagado">Pagado</MenuItem>
@@ -199,7 +219,7 @@ function VentasManager() {
                 <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 'bold' }}>Menú</Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     {productosDelNegocio.map(p => (
-                        <Button key={p.id} variant="outlined" onClick={() => handleAddItem(p)}>
+                        <Button key={p.id} variant="contained" onClick={() => handleAddItem(p)}>
                             {p.nombre}
                         </Button>
                     ))}
@@ -208,9 +228,32 @@ function VentasManager() {
                 {itemsVenta.length > 0 &&
                     <Box sx={{ mt: 3 }}>
                         <Typography variant="h6" gutterBottom>Venta Actual</Typography>
+                        
+                        {}
                         <List dense>
-                            {itemsVenta.map(item => (<ListItem key={item.id} disablePadding> <ListItemText primary={`${item.cantidad}x ${item.nombre}`} secondary={`Subtotal: $${(item.precio * item.cantidad).toLocaleString('es-CO')}`} /> </ListItem>))}
+                            {itemsVenta.map(item => (
+                                <ListItem
+                                    key={item.id}
+                                    secondaryAction={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <IconButton edge="end" size="small" onClick={() => handleDecrementItem(item.id)}>
+                                                <RemoveIcon fontSize="small" />
+                                            </IconButton>
+                                            <Typography variant="body1" sx={{ minWidth: '20px', textAlign: 'center' }}>{item.cantidad}</Typography>
+                                            <IconButton edge="end" size="small" onClick={() => handleIncrementItem(item.id)}>
+                                                <AddIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    }
+                                >
+                                    <ListItemText
+                                        primary={item.nombre}
+                                        secondary={`Subtotal: $${(item.precio * item.cantidad).toLocaleString('es-CO')}`}
+                                    />
+                                </ListItem>
+                            ))}
                         </List>
+
                         <Typography variant="h5" sx={{ mt: 2 }}>Total: ${totalVenta.toLocaleString('es-CO')}</Typography>
                         <Button variant="contained" size="large" sx={{ mt: 2 }} onClick={handleRegistrarVenta}>Registrar Venta</Button>
                     </Box>
@@ -219,7 +262,6 @@ function VentasManager() {
 
             <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom>Historial de Ventas</Typography>
-
                 <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <TextField type="date" value={filtroFecha} onChange={e => setFiltroFecha(e.target.value)} InputLabelProps={{ shrink: true }} label="Filtrar por fecha" />
                     <Select value={filtroNegocio} onChange={e => setFiltroNegocio(e.target.value)} displayEmpty>
@@ -229,7 +271,6 @@ function VentasManager() {
                     </Select>
                     <Button onClick={() => { setFiltroFecha(''); setFiltroNegocio(''); setSearchText(''); }}>Quitar Filtros</Button>
                 </Box>
-
                 <TextField
                     fullWidth
                     variant="outlined"
@@ -245,7 +286,6 @@ function VentasManager() {
                         ),
                     }}
                 />
-
                 <Box sx={{ height: 400, width: '100%' }}>
                     <DataGrid
                         rows={filteredVentas}
@@ -265,8 +305,6 @@ function VentasManager() {
                             <strong>Método de Pago:</strong> {ventaSeleccionada.metodo_pago}
                         </Alert>
                     )}
-                    
-                    {}
                     <List sx={{ border: '1px solid #ddd', borderRadius: '4px', p: 1 }}>
                         {detallesVenta.map((detalle, index) => (
                             <React.Fragment key={index}>
@@ -283,7 +321,6 @@ function VentasManager() {
                             </React.Fragment>
                         ))}
                     </List>
-
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setModalOpen(false)}>Cerrar</Button>
