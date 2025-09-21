@@ -61,7 +61,7 @@ app.delete('/productos/:id', async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
-/***********************************************************************************************************************************************************/
+/******************************************************************************************************************************************************************/
 
 // --- CRUD PARA GASTOS ---
 app.get('/gastos', async (req, res) => {
@@ -108,8 +108,7 @@ app.put('/gastos/:id', async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
-/***********************************************************************************************************************************************************/
-
+/******************************************************************************************************************************************************************/
 
 // --- CRUD PARA VENTAS ---
 app.get('/ventas', async (req, res) => {
@@ -169,7 +168,32 @@ app.post('/ventas', async (req, res) => {
         connection.release();
     }
 });
-/*********************************************************************************************************************************************************** */
+
+app.patch('/ventas/:id', async (req, res) => {
+    try {
+        const { id } = req.params;    
+        const { estado_pago } = req.body; 
+
+        if (!estado_pago) {
+            return res.status(400).json({ error: 'El campo estado_pago es requerido' });
+        }
+
+        const sql = 'UPDATE ventas SET estado_pago = ? WHERE id = ?';
+        const [result] = await db.query(sql, [estado_pago, id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Venta no encontrada' });
+        }
+
+        res.json({ message: 'Estado de pago actualizado exitosamente' });
+
+    } catch (err) {
+        console.error("Error al actualizar el estado del pago:", err);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+/******************************************************************************************************************************************************/
 
 // --- CIERRE DE CAJA Y SU HISTORIAL ---
 app.get('/cierres-caja/historial', async (req, res) => {
@@ -220,6 +244,7 @@ app.post('/cierre-caja', async (req, res) => {
         connection.release();
     }
 });
+/******************************************************************************************************************************************************************/
 
 // INICIAR EL SERVIDOR
 app.listen(PORT, () => {
