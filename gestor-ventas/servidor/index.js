@@ -11,7 +11,7 @@ app.use(express.json());
 const db = mysql.createPool({
     host: 'localhost',
     user: 'developer',
-    password: 'developer', // ¡¡IMPORTANTE: Reemplaza esto!!
+    password: 'developer',
     database: 'gestor_ventas'
 }).promise();
 
@@ -61,6 +61,7 @@ app.delete('/productos/:id', async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
+/***********************************************************************************************************************************************************/
 
 // --- CRUD PARA GASTOS ---
 app.get('/gastos', async (req, res) => {
@@ -97,7 +98,6 @@ app.post('/gastos', async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
-// Endpoint para ACTUALIZAR un gasto existente
 app.put('/gastos/:id', async (req, res) => {
     try {
         const { descripcion, monto, fecha, negocio_id } = req.body;
@@ -108,6 +108,8 @@ app.put('/gastos/:id', async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
+/***********************************************************************************************************************************************************/
+
 
 // --- CRUD PARA VENTAS ---
 app.get('/ventas', async (req, res) => {
@@ -167,6 +169,7 @@ app.post('/ventas', async (req, res) => {
         connection.release();
     }
 });
+/*********************************************************************************************************************************************************** */
 
 // --- CIERRE DE CAJA Y SU HISTORIAL ---
 app.get('/cierres-caja/historial', async (req, res) => {

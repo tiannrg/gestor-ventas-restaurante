@@ -6,8 +6,8 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';        
-import RemoveIcon from '@mui/icons-material/Remove';   
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 function VentasManager() {
     const [ventas, setVentas] = useState([]);
@@ -23,7 +23,6 @@ function VentasManager() {
     const [filtroFecha, setFiltroFecha] = useState('');
     const [filtroNegocio, setFiltroNegocio] = useState('');
     const [searchText, setSearchText] = useState('');
-    const [filteredVentas, setFilteredVentas] = useState([]);
     const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
 
     useEffect(() => {
@@ -37,13 +36,18 @@ function VentasManager() {
             .catch(error => console.error('Error al obtener las ventas:', error));
     }, [filtroFecha, filtroNegocio]);
 
-    useEffect(() => {
-        const filtered = ventas.filter(venta =>
+
+    const filteredVentas = useMemo(() => {
+        if (!searchText) {
+            return ventas;
+        }
+
+        return ventas.filter(venta =>
             (venta.cliente && venta.cliente.toLowerCase().includes(searchText.toLowerCase())) ||
             (venta.total && venta.total.toString().includes(searchText))
         );
-        setFilteredVentas(filtered);
-    }, [searchText, ventas]);
+    }, [searchText, ventas]); 
+
 
     useEffect(() => {
         fetch('http://localhost:3001/productos')
@@ -229,7 +233,6 @@ function VentasManager() {
                     <Box sx={{ mt: 3 }}>
                         <Typography variant="h6" gutterBottom>Venta Actual</Typography>
                         
-                        {}
                         <List dense>
                             {itemsVenta.map(item => (
                                 <ListItem
@@ -254,8 +257,8 @@ function VentasManager() {
                             ))}
                         </List>
 
-                        <Typography variant="h5" sx={{ mt: 2 }}>Total: ${totalVenta.toLocaleString('es-CO')}</Typography>
-                        <Button variant="contained" size="large" sx={{ mt: 2 }} onClick={handleRegistrarVenta}>Registrar Venta</Button>
+                        <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Total: ${totalVenta.toLocaleString('es-CO')}</Typography>
+                        <Button variant="contained" color="success" size="large" sx={{ mt: 2 }} onClick={handleRegistrarVenta}>Registrar Venta</Button>
                     </Box>
                 }
             </Paper>
